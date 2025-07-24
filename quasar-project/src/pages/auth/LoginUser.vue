@@ -1,10 +1,11 @@
 <template>
   <q-page class="flex flex-center">
+    <!-- Form for user login -->
     <q-form @submit.prevent="onSubmit" class="q-gutter-md">
       <q-input v-model="email" label="Email" type="email" />
       <q-input v-model="password" label="Password" type="password" />
       <q-checkbox v-model="rememberMe" label="Remember Me" />
-      <div class="q-mt-lg q-mb-lg q-ml-xl" >
+      <div class="q-mt-lg q-mb-lg q-ml-xl">
         <q-btn type="submit" label="Login" color="primary" />
       </div>
     </q-form>
@@ -12,92 +13,74 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/authStore'
-// import { useNotificationsStore } from '../../stores/notificationsStore'
-// import { useQuasar } from 'quasar'
-import { api } from 'boot/axios'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { api } from 'boot/axios';
 
-const email = ref('')
-const password = ref('')
-const router = useRouter()
-const authStore = useAuthStore()
-// const notificationsStore = useNotificationsStore()
-// const $q = useQuasar()
-const rememberMe = ref(true)
+// Reactive references for form inputs
+const email = ref('');
+const password = ref('');
+const rememberMe = ref(true);
 
+// Initialize router
+const router = useRouter();
+
+// Handle form submission
 const onSubmit = async () => {
   try {
+    // Send login request to Symfony backend
     const response = await api.post('http://localhost:8000/api/auth/login', {
       email: email.value,
       password: password.value,
-    })
+    });
 
-    // Sanctum does not provide an expiration date for the token. JWT does.
-    // response.data.expiration is set inside the auth controller
-    authStore.setToken(response.data.token, response.data.expiration)
-    // if the token is not expired, set the user and redirect to the dashboard
-    await authStore.fetchUserWithInfo(response.data.userWithInfo)
-    // // Show positive notification
-    // notificationsStore.createNotification({
-    //   message: 'Login successful! Welcome back.',
-    //   type: 'positive',
-    //   position: 'top-right',
-    //   $q,
-    // })
+    // Store token and expiration in localStorage
+    const token = response.data.token;
+    const expirationDate = new Date(response.data.expiration);
+    localStorage.setItem('token', token);
+    localStorage.setItem('tokenExpiration', expirationDate.toISOString());
 
-    // Store the rememberedEmail when the user is logged
+    // Store user info in localStorage (assuming response.data.userWithInfo contains user data)
+    const userInfo = response.data.userWithInfo || {};
+    localStorage.setItem('userInfo', JSON.stringify({
+      id: userInfo.id || null,
+      email: userInfo.email || '',
+      roles: userInfo.roles || [],
+      firstName: userInfo.firstname || '',
+      lastName: userInfo.lastname || '',
+      position: userInfo.position || '',
+      workplace: userInfo.workplace || '',
+      tel: userInfo.tel || '',
+    }));
+
+    // Store email in localStorage if "Remember Me" is checked
     if (rememberMe.value) {
-      localStorage.setItem('rememberedEmail', email.value)
+      localStorage.setItem('rememberedEmail', email.value);
     } else {
-      localStorage.removeItem('rememberedEmail')
+      localStorage.removeItem('rememberedEmail');
     }
 
-    // Redirect to the dashboard based on the user's role (GUEST, USER, ADMIN)
-    // if (authStore.getRoles.includes('GUEST')) {
-    //   router.push('/dashboardGuest')
-    // } else {
-      router.push('/dashboard')
-    // }
+    // Redirect to dashboard
+    // Note: Role-based redirection (e.g., /dashboardGuest) can be added here if needed
+    router.push('/dashboard');
   } catch (error) {
-    if (error.response) {
-      const statusCode = error.response.status
-
-      if (statusCode === 403) {
-        // Deactivated User
-      //   notificationsStore.createNotification({
-      //     message: 'Your account is deactivated. Please contact your favorite Admin.',
-      //     type: 'error',
-      //     position: 'top-right',
-      //     $q,
-      //   })
-      // } else if (statusCode === 401) {
-      //   // Credentials error
-      //   notificationsStore.createNotification({
-      //     message: 'Connection failed. Please check your credentials and try again.',
-      //     type: 'error',
-      //     position: 'top-right',
-      //     $q,
-      //   })
-      }
-    } else {
-      // No response -> network issue
-      // notificationsStore.createNotification({
-      //   message: 'Network error. Please check your internet connection.',
-      //   type: 'error',
-      //   position: 'top-right',
-      //   $q,
-      // })
-    }
+    // Error handling is minimal since notificationsStore is removed
+    // Log errors to console for debugging; consider adding UI feedback later
+    console.error('Login error:', error.response ? error.response.status : 'Network error');
   }
-}
+};
 
+// Prefill form with default credentials or remembered email on mount
 onMounted(() => {
-  const rememberedEmail = localStorage.getItem('rememberedEmail')
+  const rememberedEmail = localStorage.getItem('rememberedEmail');
   if (rememberedEmail) {
-    email.value = rememberedEmail
-    rememberMe.value = true
+    email.value = rememberedEmail;
+    rememberMe.value = true;
+  } else {
+    // Set default credentials for testing
+    email.value = 'gotham@dc.us';
+    password.value = 'batman';
+    rememberMe.value = true;
   }
-})
+});
 </script>

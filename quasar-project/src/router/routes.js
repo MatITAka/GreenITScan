@@ -8,12 +8,12 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      // {
-      //   path: 'dashboard',
-      //   name: 'Dashboard',
-      //   component: () => import('src/pages/dashboard/DashboardUser.vue'),
-      //   meta: { requiresAuth: true },
-      // },
+       {
+         path: 'dashboard',
+         name: 'Dashboard',
+         component: () => import('src/pages/dashboard/DashBoard.vue'),
+         meta: { requiresAuth: true },
+       },
       {
         path: 'login',
         name: 'Login',
