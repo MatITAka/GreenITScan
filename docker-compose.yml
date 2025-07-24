@@ -10,7 +10,7 @@ services:
       - ./quasar-project/package.json:/app/package.json
       - ./quasar-project/package-lock.json:/app/package-lock.json
     ports:
-      - "8080:8080"
+      - "9001:9000"
     container_name: quasar-frontend
 
   backend:
@@ -20,7 +20,7 @@ services:
     volumes:
       - ./api-backend:/app
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - api-backend/.env
     command: php -S 0.0.0.0:8000 -t public public/index.php
@@ -36,7 +36,7 @@ services:
       MYSQL_USER: "root"
       MYSQL_PASSWORD: "YourPassword123"
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - GreenITScan_mariadb_data:/var/lib/mysql
     healthcheck:
