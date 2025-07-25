@@ -34,7 +34,7 @@
 
 <style scoped>
 .my-dashboard {
-  background-image: url(../../../public/photos/Aalborg_Reno_Nord.jpg);
+  background-image: url(../../../public/photos/1724310862938.jpg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
