@@ -1,44 +1,24 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import pluginVue from 'eslint-plugin-vue'
-import pluginQuasar from '@quasar/app-webpack/eslint'
-import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+// Import ESLint configurations and plugins
+import js from '@eslint/js';
+import globals from 'globals';
+import pluginVue from 'eslint-plugin-vue';
+import pluginQuasar from '@quasar/app-webpack/eslint';
+import pluginCypress from 'eslint-plugin-cypress/flat';
+import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
 export default [
   {
-    /**
-     * Ignore the following files.
-     * Please note that pluginQuasar.configs.recommended() already ignores
-     * the "node_modules" folder for you (and all other Quasar project
-     * relevant folders and files).
-     *
-     * ESLint requires "ignores" key to be the only one in this object
-     */
+    // Ignore specific files (Quasar already ignores node_modules, etc.)
     // ignores: []
   },
-
   ...pluginQuasar.configs.recommended(),
   js.configs.recommended,
-
-  /**
-   * https://eslint.vuejs.org
-   *
-   * pluginVue.configs.base
-   *   -> Settings and rules to enable correct ESLint parsing.
-   * pluginVue.configs[ 'flat/essential']
-   *   -> base, plus rules to prevent errors or unintended behavior.
-   * pluginVue.configs["flat/strongly-recommended"]
-   *   -> Above, plus rules to considerably improve code readability and/or dev experience.
-   * pluginVue.configs["flat/recommended"]
-   *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
-   */
+  // Use essential Vue.js rules for error prevention
   ...pluginVue.configs['flat/essential'],
-
   {
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-
       globals: {
         ...globals.browser,
         ...globals.node, // SSR, Electron, config files
@@ -50,17 +30,15 @@ export default [
         browser: 'readonly', // BEX related
       },
     },
-
-    // add your custom rules here
+    // Custom rules for the project
     rules: {
       'prefer-promise-reject-errors': 'off',
-
-      // allow debugger during development only
+      // Allow debugger in development
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     },
   },
-
   {
+    // Configuration for PWA service worker
     files: ['src-pwa/custom-service-worker.js'],
     languageOptions: {
       globals: {
@@ -68,6 +46,18 @@ export default [
       },
     },
   },
-
+  {
+    // Configuration for Cypress test files
+    files: ['test/cypress/**/*.js'],
+    env: {
+      'cypress/globals': true, // Enable Cypress globals (describe, it, cy, etc.)
+    },
+    extends: [
+      'plugin:cypress/recommended', // Recommended Cypress rules
+    ],
+    plugins: {
+      cypress: pluginCypress, // Add Cypress plugin
+    },
+  },
   prettierSkipFormatting,
-]
+];

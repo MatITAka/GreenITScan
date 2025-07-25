@@ -33,6 +33,18 @@ const routes = [
     },
   ],
 },
+{
+  path: '/results',
+  component: () => import('layouts/MainLayout.vue'),
+  children: [
+    {
+      path: 'result',
+      name: 'ResultsPage',
+      component: () => import('src/pages/response/ResultsPage.vue'),
+      // meta: { requiresAuth: true },
+    },
+  ],
+},
   // Always leave this as last one,
   // but you can also remove it
   {
