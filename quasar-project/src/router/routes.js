@@ -21,6 +21,18 @@ const routes = [
       },
     ],
   },
+  {
+  path: '/forms',
+  component: () => import('layouts/MainLayout.vue'),
+  children: [
+    {
+      path: 'form',
+      name: 'FirstForm',
+      component: () => import('src/pages/form/FirstForm.vue'),
+      // meta: { requiresAuth: true },
+    },
+  ],
+},
   // Always leave this as last one,
   // but you can also remove it
   {
