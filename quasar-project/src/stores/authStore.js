@@ -1,14 +1,15 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-// import { useNotificationsStore } from './notificationsStore.js';
 
-// System columns that are always visible
+// System columns that are always visible in tables
 const systemColumns = ['actions'];
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
+    // Authentication token and expiration
     token: localStorage.getItem('token') || null,
     tokenExpiration: localStorage.getItem('tokenExpiration') || null,
+    // User-related data
     users: [],
     userId: null,
     roles: [],
@@ -18,8 +19,10 @@ export const useAuthStore = defineStore('auth', {
     position: '',
     workplace: '',
     tel: '',
+    // Loading and error states
     loading: false,
     error: null,
+    // Pagination settings for user list
     userPagination: {
       sortBy: 'id',
       descending: false,
@@ -28,22 +31,29 @@ export const useAuthStore = defineStore('auth', {
       rowsNumber: 0,
       search: '',
     },
+    // Table column visibility
     visibleColumns: [], // Visible columns in the table
     defaultColumns: [], // Default columns in the table
   }),
 
   getters: {
+    // Get all users
     getUsers: (state) => state.users,
+    // Check if loading
     isLoading: (state) => state.loading,
+    // Check if there is an error
     hasError: (state) => state.error,
+    // Check if user is authenticated and token is valid
     isAuthenticated: (state) =>
       state.token && state.tokenExpiration
         ? new Date(state.tokenExpiration) > new Date()
         : false,
+    // Check if token is expired
     isTokenExpired: (state) => {
       if (!state.token || !state.tokenExpiration) return true;
       return new Date(state.tokenExpiration) < new Date();
     },
+    // User data getters
     getUserId: (state) => state.userId,
     getRoles: (state) => state.roles,
     getFirstName: (state) => state.firstName,
@@ -55,12 +65,39 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    // Attempt automatic login with default credentials
+    async autoLogin() {
+      this.loading = true;
+      this.error = null;
+      try {
+        // Send login request to Symfony backend with default credentials
+        const response = await api.post('http://localhost:8000/api/auth/login', {
+          email: 'gotham@dc.us',
+          password: 'batman',
+        });
+
+        // Store token and expiration
+        this.setToken(response.data.token, response.data.expiration);
+
+        // Fetch and store user info
+        await this.fetchUserWithInfo();
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Set pagination page
     setUserPaginationPage(page) {
       this.userPagination.page = page;
     },
+    // Set rows per page
     setUserPaginationRowsPerPage(rowsPerPage) {
       this.userPagination.rowsPerPage = rowsPerPage;
     },
+    // Set total number of rows
     setUserPaginationRowsNumber(rowsNumber) {
       this.userPagination.rowsNumber = rowsNumber;
     },
@@ -88,12 +125,12 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Reset visible columns to default columns
+    // Reset visible columns to default
     resetVisibleColumns() {
       this.visibleColumns = [...this.defaultColumns];
     },
 
-    // Set the token and its expiration date
+    // Set token and expiration date
     setToken(token, expirationDate) {
       const expirationDateFormatted = new Date(expirationDate);
       this.token = token;
@@ -102,7 +139,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('tokenExpiration', expirationDateFormatted.toISOString());
     },
 
-    // Clear the token and its expiration date
+    // Clear token and expiration
     clearToken() {
       this.token = null;
       this.tokenExpiration = null;
@@ -110,11 +147,9 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('tokenExpiration');
     },
 
-    // USER PART
-
+    // Fetch user info after login
     async fetchUserWithInfo() {
       if (!this.token) return;
-
       this.loading = true;
       this.error = null;
       try {
@@ -122,32 +157,20 @@ export const useAuthStore = defineStore('auth', {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         this.setUser(response.data);
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User info fetched successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error fetching user info.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Set user data in store
     setUser(userData) {
       const userInfo = userData.user_info || {};
       this.userId = userData.id || null;
       this.roles = userData.roles || [];
       this.firstName = userInfo.firstname || '';
-      this.role = userInfo.role;
       this.lastName = userInfo.lastname || '';
       this.email = userData.email || '';
       this.position = userInfo.position || '';
@@ -155,6 +178,7 @@ export const useAuthStore = defineStore('auth', {
       this.tel = userInfo.tel || '';
     },
 
+    // Clear user data
     clearUser() {
       this.userId = null;
       this.roles = [];
@@ -166,8 +190,7 @@ export const useAuthStore = defineStore('auth', {
       this.tel = '';
     },
 
-    // ADMIN PART
-
+    // Update user information (admin)
     async updateUserInfo(updatedData) {
       this.loading = true;
       this.error = null;
@@ -188,26 +211,15 @@ export const useAuthStore = defineStore('auth', {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         this.setUser(response.data);
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User information updated successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error updating user information.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Edit a user (admin)
     async editUser(userData, userId) {
       this.loading = true;
       this.error = null;
@@ -215,27 +227,16 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.put(`/users/${userId}/edit`, userData, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User edited successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
         return response.data;
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error editing user.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Create a new user (admin)
     async createUser(userData) {
       this.loading = true;
       this.error = null;
@@ -243,27 +244,16 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.post('/users/create', userData, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User created successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
         return response.data;
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error creating user.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Deactivate a user (admin)
     async deactivateUser(userId) {
       this.loading = true;
       this.error = null;
@@ -272,26 +262,15 @@ export const useAuthStore = defineStore('auth', {
           headers: { Authorization: `Bearer ${this.token}` },
         });
         this.users = this.users.filter((user) => user.id !== userId);
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User deactivated successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error deactivating user.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Fetch all users (admin)
     async fetchUsers() {
       this.loading = true;
       this.error = null;
@@ -305,26 +284,15 @@ export const useAuthStore = defineStore('auth', {
         this.setUserPaginationPage(response.data.current_page);
         this.setUserPaginationRowsPerPage(response.data.per_page);
         this.setUserPaginationRowsNumber(response.data.total);
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Users fetched successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'Error fetching users.',
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Fetch a user by ID (admin)
     async fetchUserById(id) {
       this.loading = true;
       this.error = null;
@@ -332,48 +300,51 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.get(`/users/${id}`, {
           headers: { Authorization: `Bearer ${this.token}` },
         });
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: 'User fetched successfully.',
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
         return response.data;
       } catch (error) {
         this.error = error.message;
-        // const notificationsStore = useNotificationsStore();
-        // notificationsStore.createNotification({
-        //   message: `Error fetching user with ID ${id}.`,
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
+    // Clear roles
     emptyRoles() {
       this.roles = [];
     },
+
+    // Set roles
     setRoles(roles) {
       this.roles = roles;
     },
+
+    // Set last name
     setLastName(lastName) {
       this.lastName = lastName;
     },
+
+    // Set first name
     setFirstName(firstName) {
       this.firstName = firstName;
     },
+
+    // Set telephone
     setTel(tel) {
       this.tel = tel;
     },
+
+    // Set position
     setPosition(position) {
       this.position = position;
     },
+
+    // Set workplace
     setWorkplace(workplace) {
       this.workplace = workplace;
     },
+
+    // Set email
     setEmail(email) {
       this.email = email;
     },
