@@ -4,10 +4,10 @@
     <h4 class="text-center q-mb-md">Calculate Your Carbon Footprint</h4>
 
     <q-form @submit="submitForm" class="q-pa-md q-gutter-md">
-      <!-- Daily Usage Section -->
+      <!-- Daily usage section header -->
       <h5>📧 Daily Usage</h5>
 
-      <!-- Email Simple Input -->
+      <!-- Input for emails sent per day -->
       <q-input
         v-model.number="formData.emailSimple"
         label="Emails sent per day *"
@@ -15,7 +15,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Email with Attachment Input -->
+      <!-- Input for emails with attachments -->
       <q-input
         v-model.number="formData.emailPJ"
         label="Emails with attachment (1 MB) per day *"
@@ -23,7 +23,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Web Queries Input -->
+      <!-- Input for web queries per day -->
       <q-input
         v-model.number="formData.webQueries"
         label="Web queries per day *"
@@ -31,7 +31,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Streaming Video Input -->
+      <!-- Input for video streaming hours per week -->
       <q-input
         v-model.number="formData.streamingVideo"
         label="Hours of video streaming per week *"
@@ -39,7 +39,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Streaming Audio Input -->
+      <!-- Input for music streaming minutes per day -->
       <q-input
         v-model.number="formData.streamingAudio"
         label="Minutes of music streaming per day *"
@@ -47,7 +47,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Video Conference Input -->
+      <!-- Input for video conferencing hours per week -->
       <q-input
         v-model.number="formData.videoConf"
         label="Hours of video conferencing per week *"
@@ -55,10 +55,10 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Equipment Section -->
+      <!-- Equipment section header -->
       <h5>🖥️ Equipment Used This Year</h5>
 
-      <!-- PC Count Input -->
+      <!-- Input for number of laptops used -->
       <q-input
         v-model.number="formData.pcCount"
         label="Number of laptops used this year *"
@@ -66,7 +66,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Smartphone Count Input -->
+      <!-- Input for number of smartphones used -->
       <q-input
         v-model.number="formData.smartphoneCount"
         label="Number of smartphones used this year *"
@@ -74,7 +74,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Console Count Input -->
+      <!-- Input for number of gaming consoles used -->
       <q-input
         v-model.number="formData.consoleCount"
         label="Number of gaming consoles used *"
@@ -82,7 +82,7 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Cloud Count Input -->
+      <!-- Input for number of cloud services used -->
       <q-input
         v-model.number="formData.cloudCount"
         label="Number of cloud or hosting services used *"
@@ -90,15 +90,15 @@
         :rules="[(val) => val >= 0 || 'Value must be non-negative', (val) => val !== null || 'Field is required']"
       />
 
-      <!-- Mandatory Fields Note -->
+      <!-- Note for mandatory fields -->
       <div>
         <p class="q-pa-md">Fields marked with an * are mandatory</p>
       </div>
 
-      <!-- Form Buttons -->
+      <!-- Form submission and cancellation buttons -->
       <div class="row q-pa-md">
-        <BaseButton label="Calculate Footprint" type="submit" color="primary" class="q-ma-lg" />
-        <BaseButton label="Cancel" @click="cancelForm" color="negative" class="q-ma-lg" />
+        <!-- <BaseButton label="Calculate Footprint" type="submit" color="primary" class="q-ma-lg" />
+        <BaseButton label="Cancel" @click="cancelForm" color="negative" class="q-ma-lg" /> -->
       </div>
     </q-form>
   </q-page>
@@ -108,19 +108,22 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 // import { useNotificationsStore } from '../../stores/notificationsStore';
+import { useCarbonFootprintStore } from '../../stores/carbonFootprintStore';
 // import BaseButton from 'components/UI/BaseButton.vue';
 
 export default {
+  // Register components
   components: {
     // BaseButton,
   },
 
   setup() {
-    // Initialize notifications store
+    // Initialize stores
+    const carbonFootprintStore = useCarbonFootprintStore();
     // const notificationsStore = useNotificationsStore();
     const router = useRouter();
 
-    // Form data reactive object
+    // Reactive form data object
     const formData = ref({
       emailSimple: null,
       emailPJ: null,
@@ -134,54 +137,22 @@ export default {
       cloudCount: null,
     });
 
-    // Function to calculate carbon footprint (mock implementation)
-    const calculateCarbonFootprint = (data) => {
-      // Mock calculation: replace with actual carbon footprint calculation logic
-      const footprint = (
-        data.emailSimple * 0.01 + // g CO2 per email
-        data.emailPJ * 0.05 + // g CO2 per email with attachment
-        data.webQueries * 0.02 + // g CO2 per web query
-        data.streamingVideo * 150 + // g CO2 per hour of video streaming
-        data.streamingAudio * 0.1 + // g CO2 per minute of audio streaming
-        data.videoConf * 200 + // g CO2 per hour of video conferencing
-        data.pcCount * 200000 + // g CO2 per laptop per year
-        data.smartphoneCount * 80000 + // g CO2 per smartphone per year
-        data.consoleCount * 100000 + // g CO2 per console per year
-        data.cloudCount * 50000 // g CO2 per cloud service per year
-      ).toFixed(2); // Total in grams CO2
-
-      return footprint;
-    };
-
     // Handle form submission
     const submitForm = async () => {
       try {
-        // Perform calculation
-        const footprint = calculateCarbonFootprint(formData.value);
-console.log(`Carbon footprint calculated: ${footprint} g CO2`)
-        // Show success notification
-        // notificationsStore.createNotification({
-        //   message: `Carbon footprint calculated: ${footprint} g CO2`,
-        //   type: 'positive',
-        //   position: 'top-right',
-        // });
-
-        // Redirect to a results page or home (adjust as needed)
+        // Save footprint using the store
+        await carbonFootprintStore.createFootprint(formData.value);
+        // Redirect to home page
         router.push({ name: 'Home' });
       } catch (error) {
-        // Show error notification
         console.log(error)
-        // notificationsStore.createNotification({
-        //   message: `Error calculating footprint: ${error.message}`,
-        //   type: 'negative',
-        //   position: 'top-right',
-        // });
+        // Error notification should be handled by the store
       }
     };
 
     // Handle form cancellation
     const cancelForm = () => {
-      // Redirect to home or another page
+      // Redirect to home page
       router.push({ name: 'Home' });
     };
 
